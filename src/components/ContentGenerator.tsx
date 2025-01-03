@@ -1,8 +1,8 @@
 "use client";
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Wand2, Moon, Sun } from "lucide-react";
+import { Copy, Wand2, Moon, Sun, Info, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import OpenAI from 'openai';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,8 @@ const ContentGenerator = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isThemeVisible, setIsThemeVisible] = useState(true);
+
   const { theme, setTheme } = useTheme();
 
   const getTimestamp = () => {
@@ -416,91 +418,207 @@ const ContentGenerator = () => {
     setPrompt(e.target.value);
   };
 
+  const TIPS = [
+    "Try being specific about your topic and desired tone",
+    "Include target audience in your prompt for better results",
+    "Mention desired length: 'short summary' or 'detailed article'",
+    "Request specific sections using ### for headers",
+    "Ask for examples or case studies in your content",
+    "Specify formatting: bullets, paragraphs, or numbered lists",
+    "Request citations or sources if needed",
+    "Add 'Use bold text for key points' in your prompt"
+  ];
+  
+  // Add Tips component
+  const LoadingState = () => {
+    const [tipIndex, setTipIndex] = useState(0);
+  
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setTipIndex((prev) => (prev + 1) % TIPS.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }, []);
+  
+    return (
+      <div className="mt-6 space-y-4 animate-fade-in">
+      
+        <div className="p-6 bg-white/50 dark:bg-gray-800/50 rounded-lg backdrop-blur-sm 
+          border border-blue-100 dark:border-blue-900/30">
+          <div className="flex items-start gap-3">
+            <div className="mt-1 p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+              <div className="w-4 h-4 border-2 border-current border-t-transparent 
+                rounded-full animate-spin text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="space-y-2">
+              <p className="font-medium text-blue-600 dark:text-blue-400">
+                Quick Tip:
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 animate-pulse">
+                {TIPS[tipIndex]}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+
   return (
-    <div className="min-h-screen w-full p-4 transition-colors duration-200 dark:bg-gray-900">
-      <div className="fixed top-4 right-4 flex items-center space-x-2">
-        <Sun className="h-5 w-5 dark:text-gray-400" />
-        <Switch
-          checked={theme === 'dark'}
-          onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        />
-        <Moon className="h-5 w-5 text-gray-400" />
+    <div className="min-h-screen w-full py-4 px-2 sm:py-6 sm:px-4 md:py-8 md:px-6 
+    transition-colors duration-200 dark:bg-gray-900">
+    {/* Theme Toggle - Responsive positioning */}
+    <div className={`fixed top-2 sm:top-4 transition-all duration-300 z-50
+        ${isThemeVisible ? 'right-2 sm:right-4' : '-right-20'}`}>
+        
+        {/* Toggle Button */}
+        <button 
+          onClick={() => setIsThemeVisible(!isThemeVisible)}
+          className="absolute -left-7 top-1/2 -translate-y-1/2 p-1.5 
+            bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-l-lg 
+            shadow-lg transition-colors hover:bg-white dark:hover:bg-gray-900"
+          aria-label={isThemeVisible ? 'Hide theme toggle' : 'Show theme toggle'}
+        >
+          {isThemeVisible ? 
+            <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-300" /> : 
+            <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+          }
+        </button>
+
+        {/* Theme Toggle */}
+        <div className="p-3 sm:p-4 bg-white/80 dark:bg-gray-900/80 
+          backdrop-blur-sm rounded-lg shadow-lg transition-all duration-200">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 dark:text-gray-400" />
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label="Toggle theme"
+              className="data-[state=checked]:bg-blue-600"
+            />
+            <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-blue-400" />
+          </div>
+        </div>
       </div>
 
-      <Card className="max-w-3xl mx-auto backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 
-        shadow-xl hover:shadow-2xl transition-all duration-200 border-0">
-        <CardHeader className="space-y-4 px-6 pt-8">
-          <CardTitle className="text-4xl font-bold text-center bg-gradient-to-r 
-            from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 
-            bg-clip-text text-transparent animate-gradient">
+    <Card className="w-full max-w-3xl mx-auto mt-12 sm:mt-16 backdrop-blur-sm 
+        bg-white/90 dark:bg-gray-800/90 shadow-xl transition-all duration-200 border-0">
+        <CardHeader className="space-y-3 sm:space-y-4 p-4 sm:p-6 md:p-8">
+          <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold text-center 
+            bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 
+            dark:to-purple-400 bg-clip-text text-transparent animate-gradient">
             Smart Content Generator
           </CardTitle>
-          <p className="text-center text-gray-500 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-center text-gray-500 dark:text-gray-400">
             Transform your ideas into polished content
           </p>
         </CardHeader>
 
-        <CardContent className="space-y-6 p-6">
-          <Textarea
-            value={prompt}
-            onChange={handleChange}
-            placeholder="Enter your content prompt here..."
-            className="min-h-[120px] text-lg p-4 rounded-lg bg-white/50 dark:bg-gray-700/50 
-              backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:ring-2 
-              focus:ring-blue-500 dark:focus:ring-blue-400 transition-all resize-none"
-          />
-
-          <Button
-            onClick={handleGenerateContent}
-            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 
-              dark:from-blue-500 dark:to-purple-500 text-white rounded-lg font-medium 
-              tracking-wide transform transition-all duration-200 hover:scale-[1.02] 
-              hover:shadow-lg disabled:opacity-50"
-            disabled={loading || !prompt}
-          >
-            {loading ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" />
-                <span>Generating...</span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Wand2 className="w-5 h-5" />
-                <span>Generate Content</span>
-              </div>
-            )}
-          </Button>
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8">
+      <div className="relative">
+        <Textarea
+          value={prompt}
+          onChange={handleChange}
+          placeholder="Enter your content prompt here..."
+          className="min-h-[120px] text-base sm:text-lg p-3 sm:p-4 rounded-lg 
+            bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border-gray-200 
+            dark:border-gray-600 focus:ring-2 focus:ring-blue-500 
+            dark:focus:ring-blue-400 transition-all resize-none"
+        />
+      <div className="absolute top-3 right-3 group">
+  <Info className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-blue-500 
+    transition-all duration-200 cursor-help transform hover:scale-110" />
+    
+  <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100
+    absolute right-0 sm:right-auto sm:left-full w-[280px] sm:w-64 p-2.5 
+    mt-2 sm:mt-0 sm:ml-2 text-sm bg-white/95 dark:bg-gray-800/95 
+    rounded-lg shadow-md border border-gray-200/50 dark:border-gray-700/50 
+    backdrop-blur-sm transition-all duration-200 transform origin-top-right 
+    scale-95 group-hover:scale-100 z-50">
+    
+    <div className="space-y-1.5">
+      <p className="text-sm font-medium text-gray-900 dark:text-white mb-1.5 
+        border-b border-gray-100 dark:border-gray-700 pb-1.5">
+        Writing Tips
+      </p>
+      <ul className="space-y-1.5 max-h-[280px] overflow-y-auto 
+        scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
+        {TIPS.map((tip, index) => (
+          <li key={index} 
+            className="flex items-start gap-2 text-gray-600 dark:text-gray-300 
+            hover:text-gray-900 dark:hover:text-white transition-colors 
+            px-1 py-0.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50">
+            <span className="text-blue-500 mt-0.5">•</span>
+            <span className="text-[13px] leading-relaxed">{tip}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</div>
+      </div>
+      <Button
+    onClick={handleGenerateContent}
+    className="w-full h-10 sm:h-12 bg-gradient-to-r from-blue-600 to-purple-600 
+      text-white rounded-lg font-medium tracking-wide transition-all duration-200 
+      hover:scale-[1.02] hover:shadow-lg disabled:opacity-50"
+    disabled={loading || !prompt}
+  >
+  <div className={`flex items-center justify-center gap-2 
+    transition-opacity duration-200 ${loading ? 'opacity-0' : 'opacity-100'}`}>
+    <Wand2 className="w-5 h-5" />
+    <span>Generate Content</span>
+  </div>
+  
+  {loading && (
+    <div className="absolute inset-0 flex items-center justify-center gap-3 
+      bg-gradient-to-r from-blue-600 to-purple-600">
+      <div className="w-5 h-5 border-2 border-white border-t-transparent 
+        rounded-full animate-spin" />
+      <span>Generating...</span>
+    </div>
+  )}
+  </Button>
+  {loading && <LoadingState />}
 
           {generatedContent && (
-            <div className="mt-8 rounded-lg overflow-hidden bg-white/50 dark:bg-gray-700/50 
-              backdrop-blur-sm animate-fadeIn">
-              <div className="flex items-center justify-between p-4 border-b 
-                dark:border-gray-600">
-                <h3 className="text-lg font-semibold dark:text-white">Generated Content</h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCopy}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-600"
-                >
-                  <Copy className="w-5 h-5" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" className="flex items-center gap-2">
-                      <Save className="w-4 h-4" />
-                      Save As
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
+            <div className="mt-6 sm:mt-8 rounded-lg overflow-hidden bg-white/50 
+              dark:bg-gray-700/50 backdrop-blur-sm animate-fadeIn">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center 
+                justify-between p-3 sm:p-4 border-b dark:border-gray-600 gap-3 sm:gap-4">
+                <h3 className="text-base sm:text-lg font-semibold dark:text-white">
+                  Generated Content
+                </h3>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCopy}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-600"
+                  >
+                    <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="secondary" 
+                        className="flex items-center gap-2 w-full sm:w-auto">
+                        <Save className="w-4 h-4" />
+                        Save As
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={saveAsDoc}>Word Document</DropdownMenuItem>
                     <DropdownMenuItem onClick={saveAsPDF}>PDF File</DropdownMenuItem>
                     <DropdownMenuItem onClick={saveAsImage}>Image (PNG)</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-              <div ref={contentRef} className="p-6 prose dark:prose-invert max-w-none">
+              <div ref={contentRef} 
+                className="p-4 sm:p-6 prose dark:prose-invert max-w-none 
+                prose-sm sm:prose-base">
                 {formatContent(generatedContent)}
               </div>
             </div>

@@ -1,13 +1,19 @@
+import type { Metadata } from 'next';
 import ContentGenerator from '../components/ContentGenerator';
 
-const Home = () => {
-
-
-    return (
-      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
-      <ContentGenerator />
-    </div>
-    );
+export const metadata: Metadata = {
+  title: 'Smart Content Generator',
+  description: 'AI-powered content generation tool',
+  keywords: ['AI', 'content generator', 'writing assistant'],
 };
 
-export default Home;
+export default function Home() {
+  return (
+    <main className="min-h-screen w-full 
+      transition-colors duration-200">
+   
+        <ContentGenerator />
+  
+    </main>
+  );
+}
