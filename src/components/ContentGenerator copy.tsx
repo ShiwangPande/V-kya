@@ -1,7 +1,6 @@
 "use client";
 import { useState, useRef, ChangeEvent, useEffect } from "react";
 import OpenAI from "openai";
-import { motion } from "framer-motion";
 import {
   Languages,
   Search,
@@ -17,8 +16,6 @@ import {
   Save,
   ChevronDown,
   Loader,
-  Trash2,
-  Edit3,
 } from "lucide-react";
 import { saveAs } from "file-saver";
 import html2canvas from "html2canvas";
@@ -65,16 +62,14 @@ const LANGUAGES = [
 ];
 
 const TIPS = [
-  "Be specific about the topic and tone.",
-  "Identify your target audience.",
-  "Specify the desired length.",
-  "Use ### for headers.",
-  "Request examples or case studies.",
-  "Specify formatting preferences.",
-  "Request citations if needed.",
-  "Highlight key points with bold text.",
-  "Use bullet points for lists.",
-  "Provide context or background information."
+  "Be specific about topic and tone",
+  "Include target audience",
+  "Specify desired length",
+  "Use ### for headers",
+  "Request examples or case studies",
+  "Specify formatting preferences",
+  "Request citations if needed",
+  "Use bold text for key points",
 ];
 
 const ContentGenerator = () => {
@@ -89,41 +84,19 @@ const ContentGenerator = () => {
   const [translatedContent, setTranslatedContent] = useState("");
   const [tipIndex, setTipIndex] = useState(0);
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState("generate");
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
   const { theme, setTheme } = useTheme();
 
-  const THEME_COLORS = {
-    primary: "from-teal-500 to-cyan-500",
-    secondary: "from-cyan-400 to-teal-400",
-    accent: "from-teal-400 to-cyan-400"
-  };
-
-  const OPENAI_CONFIG = {
-    model: "gpt-4o-mini",
-    temperature: 0.7,
-    max_tokens: 1000,
-    presence_penalty: 0.6,
-    frequency_penalty: 0.5
-  };
-
   useEffect(() => {
     const saved = localStorage.getItem("savedPrompts");
     if (saved) setSavedPrompts(JSON.parse(saved));
-
-    const savedContent = localStorage.getItem("generatedContent");
-    if (savedContent) setGeneratedContent(savedContent);
 
     const interval = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % TIPS.length);
     }, 3000);
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("generatedContent", generatedContent);
-  }, [generatedContent]);
 
   const makeOpenAIRequest = async <T,>(
     request: (openai: OpenAI) => Promise<T>, 
@@ -159,24 +132,22 @@ const ContentGenerator = () => {
     setLoading(true);
     try {
       const response = await makeOpenAIRequest(   openai => openai.chat.completions.create({
-        ...OPENAI_CONFIG,
+        model: 'gpt-3.5-turbo', 
         messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 1000
       }),
       currentKeyIndex,
       setCurrentKeyIndex
     );
       if (response.choices[0].message.content) {
         setGeneratedContent(response.choices[0].message.content);
-        toast({
-          title: "Success!",
-          description: "Content generated successfully",
-        });
       }
-    }catch (error: any) {
+    }catch (error) {
       console.error("Generation error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to generate content",
+        description: "Failed to generate content",
         variant: "destructive",
       });
     } finally {
@@ -190,7 +161,7 @@ const ContentGenerator = () => {
     try {
       const response = await makeOpenAIRequest(
         openai => openai.chat.completions.create({
-          ...OPENAI_CONFIG,
+        model: 'gpt-3.5-turbo', 
         messages: [
           {
             role: "system",
@@ -199,6 +170,8 @@ const ContentGenerator = () => {
           },
           { role: "user", content: searchQuery },
         ],
+        temperature: 0.7,
+        max_tokens: 1000
       }),
       currentKeyIndex,
       setCurrentKeyIndex
@@ -206,10 +179,6 @@ const ContentGenerator = () => {
       setRecommendations(
         response.choices[0].message.content?.split("\n") || []
       );
-      toast({
-        title: "Search Completed",
-        description: "AI-generated suggestions are ready.",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -227,7 +196,7 @@ const ContentGenerator = () => {
     try {
       const response = await makeOpenAIRequest(
         openai => openai.chat.completions.create({
-          ...OPENAI_CONFIG,
+        model: 'gpt-3.5-turbo', 
         messages: [
           {
             role: "system",
@@ -237,6 +206,8 @@ const ContentGenerator = () => {
           },
           { role: "user", content: generatedContent },
         ],
+        temperature: 0.7,
+        max_tokens: 1000
       }),
       currentKeyIndex,
       setCurrentKeyIndex
@@ -263,14 +234,6 @@ const ContentGenerator = () => {
     });
   };
 
-  const clearContent = () => {
-    setGeneratedContent("");
-    toast({
-      title: "Cleared",
-      description: "Generated content cleared",
-    });
-  };
-
   const formatContent = (content: string) => {
     return content
       .split("\n")
@@ -279,7 +242,7 @@ const ContentGenerator = () => {
           return (
             <h1
               key={index}
-              className="text-3xl font-bold mb-4 mt-6 text-teal-600 dark:text-cyan-400"
+              className="text-3xl font-bold mb-4 mt-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
             >
               {line.replace(/^###\s+/, "")}
             </h1>
@@ -361,48 +324,6 @@ const ContentGenerator = () => {
     },
   };
 
-  const Shimmer = () => (
-    <div className="animate-pulse space-y-3">
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-    </div>
-  );
-  
-  const SearchLoadingCard = () => (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="p-4 border rounded-lg space-y-2 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50"
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 animate-pulse" />
-        <div className="h-4 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded w-1/4 animate-pulse" />
-      </div>
-      <Shimmer />
-    </motion.div>
-  );
-
-  const useSavedPrompt = (prompt: string) => {
-    setPrompt(prompt);
-    setActiveTab("generate");
-    toast({
-      title: "Prompt Loaded",
-      description: "The saved prompt has been loaded.",
-    });
-  };
-
-  const removeSavedPrompt = (index: number) => {
-    const updated = savedPrompts.filter((_, i) => i !== index);
-    setSavedPrompts(updated);
-    localStorage.setItem("savedPrompts", JSON.stringify(updated));
-    toast({
-      title: "Prompt Removed",
-      description: "The saved prompt has been removed.",
-    });
-  };
-
   return (
     <div className="min-h-screen w-full py-8 px-4 transition-colors dark:bg-gray-900">
       <div
@@ -412,7 +333,7 @@ const ContentGenerator = () => {
       >
         <Button
           onClick={() => setIsThemeVisible(!isThemeVisible)}
-          className="absolute -left-7 top-1/2 -translate-y-1/2 p-1.5 bg-teal-500 dark:bg-cyan-500 backdrop-blur-sm rounded-l-lg"
+          className="absolute -left-7 top-1/2 -translate-y-1/2 p-1.5 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-l-lg"
         >
           {isThemeVisible ? (
             <ChevronRight className="h-4 w-4" />
@@ -421,28 +342,30 @@ const ContentGenerator = () => {
           )}
         </Button>
 
-        <div className="p-4 backdrop-blur-md bg-white/30 dark:bg-gray-900/30 rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-700/50">
+        <div className="p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg shadow-lg">
           <div className="flex items-center gap-3">
-            <Sun className="h-5 w-5 text-teal-500" />
+            <Sun className="h-5 w-5 text-yellow-500" />
             <Switch
               checked={theme === "dark"}
-              onCheckedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="data-[state=checked]:bg-cyan-600"
+              onCheckedChange={() =>
+                setTheme(theme === "dark" ? "light" : "dark")
+              }
+              className="data-[state=checked]:bg-blue-600"
             />
-            <Moon className="h-5 w-5 text-cyan-400" />
+            <Moon className="h-5 w-5 text-blue-400" />
           </div>
         </div>
       </div>
 
-      <Card className="w-full max-w-4xl mx-auto backdrop-blur-lg bg-white/90 dark:bg-gray-900/90 border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
+      <Card className="w-full max-w-3xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-4xl font-bold text-center bg-gradient-to-r from-teal-500 to-cyan-500 bg-clip-text text-transparent">
-            AI Content Generator
+          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Smart Content Generator
           </CardTitle>
         </CardHeader>
 
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <Tabs defaultValue="generate" className="space-y-6">
             <TabsList className="grid grid-cols-3 gap-4">
               <TabsTrigger value="generate">Generate</TabsTrigger>
               <TabsTrigger value="search">Search</TabsTrigger>
@@ -459,7 +382,7 @@ const ContentGenerator = () => {
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LANGUAGES.map((lang) => (
+                  {LANGUAGES.map((lang) => (
                       <SelectItem key={lang.code} value={lang.code}>
                         {lang.name}
                       </SelectItem>
@@ -501,19 +424,15 @@ const ContentGenerator = () => {
 
               <Button
                 onClick={generateContent}
-                className={`w-full h-12 bg-gradient-to-r ${THEME_COLORS.primary} hover:opacity-90 transition-all transform hover:scale-[1.01] shadow-lg`}
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600"
                 disabled={loading || !prompt.trim()}
               >
                 {loading ? (
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                  />
+                  <Loader className="w-5 h-5 mr-2 animate-spin" />
                 ) : (
                   <Wand2 className="w-5 h-5 mr-2" />
                 )}
-                {loading ? "Generating..." : "Generate Content"}
+                Generate Content
               </Button>
 
               {loading && (
@@ -528,59 +447,47 @@ const ContentGenerator = () => {
               )}
 
               {generatedContent && (
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
+                <div
                   ref={contentRef}
-                  className="mt-8 rounded-lg bg-white/50 dark:bg-gray-700/50 shadow-lg hover:shadow-xl transition-shadow"
+                  className="mt-8 rounded-lg bg-white/50 dark:bg-gray-700/50"
                 >
-                  <div
-                    ref={contentRef}
-                    className="mt-8 rounded-lg bg-white/50 dark:bg-gray-700/50"
-                  >
-                    <div className="flex justify-between p-4 border-b">
-                      <h3 className="text-lg font-semibold">Generated Content</h3>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          onClick={exportHandlers.copyToClipboard}
-                        >
-                          <Copy className="w-5 h-5" />
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="secondary">
-                              <Save className="w-4 h-4 mr-2" />
-                              Save As
-                              <ChevronDown className="w-4 h-4 ml-2" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={exportHandlers.saveAsDoc}>
-                              Word Document
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={exportHandlers.saveAsPDF}>
-                              PDF File
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={exportHandlers.saveAsImage}
-                            >
-                              Image (PNG)
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                    <div className="p-6 prose dark:prose-invert max-w-none">
-                      {formatContent(generatedContent)}
-                    </div>
-                    <div className="p-4 border-t">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Word Count: {generatedContent.split(/\s+/).length}
-                      </p>
+                  <div className="flex justify-between p-4 border-b">
+                    <h3 className="text-lg font-semibold">Generated Content</h3>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        onClick={exportHandlers.copyToClipboard}
+                      >
+                        <Copy className="w-5 h-5" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="secondary">
+                            <Save className="w-4 h-4 mr-2" />
+                            Save As
+                            <ChevronDown className="w-4 h-4 ml-2" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={exportHandlers.saveAsDoc}>
+                            Word Document
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={exportHandlers.saveAsPDF}>
+                            PDF File
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={exportHandlers.saveAsImage}
+                          >
+                            Image (PNG)
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                </motion.div>
+                  <div className="p-6 prose dark:prose-invert max-w-none">
+                    {formatContent(generatedContent)}
+                  </div>
+                </div>
               )}
 
               {generatedContent && (
@@ -602,78 +509,37 @@ const ContentGenerator = () => {
                   </div>
                 </div>
               )}
-
-              {generatedContent && (
-                <Button
-                  onClick={clearContent}
-                  variant="outline"
-                  className="w-full mt-4"
-                >
-                  <Loader className="w-4 h-4 mr-2" />
-                  Clear Content
-                </Button>
-              )}
             </TabsContent>
 
             <TabsContent value="search" className="space-y-4">
-              <motion.div 
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="flex gap-2"
-              >
+              <div className="flex gap-2">
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for content ideas..."
-                  className="flex-1 transition-all focus:ring-2 ring-blue-500"
+                  className="flex-1"
                 />
-                <Button 
-                  onClick={handleSearch}
-                  className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:opacity-90 transition-opacity"
-                >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Searching...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Search
-                    </>
-                  )}
+                <Button onClick={handleSearch}>
+                  <Search className="w-4 h-4 mr-2" />
+                  Search
                 </Button>
-              </motion.div>
+              </div>
 
-              {loading ? (
-                <div className="space-y-4">
-                  <SearchLoadingCard />
-                  <SearchLoadingCard />
-                  <SearchLoadingCard />
-                </div>
-              ) : recommendations.length > 0 && (
-                <motion.div 
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ staggerChildren: 0.1 }}
-                  className="space-y-3"
-                >
+              {recommendations.length > 0 && (
+                <div className="space-y-3">
                   <h4 className="font-medium">Recommendations</h4>
                   <div className="grid gap-2">
                     {recommendations.map((rec, idx) => (
-                      <motion.div
+                      <div
                         key={idx}
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: idx * 0.1 }}
-                        className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transform hover:scale-[1.02] transition-all"
+                        className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                         onClick={() => setPrompt(rec)}
                       >
-                        <p className="text-sm">{formatContent(rec)}</p>
-                      </motion.div>
+                        <p className="text-sm">{rec}</p>
+                      </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
             </TabsContent>
 
@@ -684,34 +550,19 @@ const ContentGenerator = () => {
                 </p>
               ) : (
                 savedPrompts.map((saved, idx) => (
-                  <motion.div
+                  <div
                     key={idx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 border rounded-lg flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                    className="p-4 border rounded-lg flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
-                    <p className="text-sm flex-1">{formatContent(saved)}</p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => useSavedPrompt(saved)}
-                        className="flex items-center gap-1 text-teal-600 dark:text-cyan-400 hover:text-teal-800 dark:hover:text-cyan-600"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                        Use
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeSavedPrompt(idx)}
-                        className="flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Remove
-                      </Button>
-                    </div>
-                  </motion.div>
+                    <p className="text-sm flex-1">{saved}</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPrompt(saved)}
+                    >
+                      Use
+                    </Button>
+                  </div>
                 ))
               )}
             </TabsContent>
