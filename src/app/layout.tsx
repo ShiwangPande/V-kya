@@ -13,10 +13,10 @@ const fontSans = FontSans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Smart Content Generator",
-    template: "%s | Smart Content Generator"
+    default: "PromptAI",
+    template: "%s | PromptAI"
   },
-  description: "AI-powered content generation tool using OpenAI GPT",
+  description: "AI-powered content generation tool using PromptAI",
   keywords: ["AI", "content", "generator", "OpenAI", "GPT", "writing assistant"],
   authors: [{ name: "Content Generator" }],
   viewport: "width=device-width, initial-scale=1",
@@ -24,6 +24,11 @@ export const metadata: Metadata = {
     { media: "(prefers-color-scheme: light)", color: "white" },
     { media: "(prefers-color-scheme: dark)", color: "#0f172a" }
   ],
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
